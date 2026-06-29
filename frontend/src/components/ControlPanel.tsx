@@ -5,7 +5,7 @@ import { startSwarmSession } from '../lib/api';
 import { useSSE } from '../hooks/useSSE';
 
 export function ControlPanel() {
-  const { swarmState, swarmConfig, reset, setSwarmState, sessionId, setSessionId } = useAppStore();
+  const { swarmState, swarmConfig, reset, setSwarmState, sessionId, setSessionId, agents } = useAppStore();
   const { connect, disconnect } = useSSE();
   
   const [config, setConfig] = useState<SwarmConfig>(swarmConfig);
@@ -50,7 +50,7 @@ export function ControlPanel() {
     <div className="glass-panel p-6 h-full flex flex-col">
       <h2 className="text-xl font-bold mb-6 text-white/90 border-b border-white/10 pb-4">Configuration</h2>
       
-      <form onSubmit={handleStart} className="flex flex-col gap-4 flex-1">
+      <form onSubmit={handleStart} className="flex flex-col gap-4 flex-1 overflow-y-auto custom-scrollbar pr-2 pb-4">
         <div>
           <label className="block text-xs font-medium text-white/50 mb-1 uppercase tracking-wider">Dataset</label>
           <select 
@@ -164,27 +164,62 @@ export function ControlPanel() {
           />
         </div>
 
-        <div className="mt-auto pt-4 flex gap-3">
-          {isRunning ? (
-            <button 
-              type="button"
-              onClick={handleReset}
-              className="flex-1 py-3 px-4 rounded-md font-bold text-sm bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 transition-all"
-            >
-              STOP
-            </button>
-          ) : (
-            <button 
-              type="submit"
-              className="flex-1 py-3 px-4 rounded-md font-bold text-sm text-white relative overflow-hidden group"
-              style={{ background: 'linear-gradient(90deg, var(--color-architect-start), var(--color-architect-end))' }}
-            >
-              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative flex items-center justify-center gap-2">
-                🚀 Launch Swarm
+        <div className="mt-auto pt-4 flex flex-col gap-4">
+          {agents.explorer.output && (
+            <div className="w-full p-4 rounded-md border border-[var(--color-explorer-start)]/30 bg-[var(--color-explorer-start)]/5 text-xs relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-[var(--color-explorer-start)]"></div>
+              <h3 className="font-bold text-[var(--color-explorer-start)] mb-3 flex items-center gap-2">
+                <span>📊</span> Dataset Profile (Auto-Detected)
+              </h3>
+              
+              <div className="space-y-2 text-white/80">
+                <div className="flex justify-between border-b border-white/5 pb-1">
+                  <span className="text-white/50">Dataset:</span>
+                  <span className="font-mono">{agents.explorer.output.name}</span>
+                </div>
+                <div className="flex justify-between border-b border-white/5 pb-1">
+                  <span className="text-white/50">Input Shape:</span>
+                  <span className="font-mono">[{agents.explorer.output.input_shape?.join(', ')}]</span>
+                </div>
+                <div className="flex justify-between border-b border-white/5 pb-1">
+                  <span className="text-white/50">Channels:</span>
+                  <span className="font-mono">{agents.explorer.output.input_shape?.[0] === 1 ? '1 (Grayscale)' : agents.explorer.output.input_shape?.[0] === 3 ? '3 (RGB)' : agents.explorer.output.input_shape?.[0]}</span>
+                </div>
+                <div className="flex justify-between border-b border-white/5 pb-1">
+                  <span className="text-white/50">Classes:</span>
+                  <span className="font-mono">{agents.explorer.output.num_classes}</span>
+                </div>
+                
+                <div className="pt-2 mt-2">
+                  <span className="text-white/50 block mb-1">Recommended Architectures:</span>
+                  <p className="text-[10px] text-white/70">{agents.explorer.output.recommended_architectures?.join(', ')}</p>
+                </div>
               </div>
-            </button>
+            </div>
           )}
+          
+          <div className="flex gap-3 w-full">
+            {isRunning ? (
+              <button 
+                type="button"
+                onClick={handleReset}
+                className="flex-1 py-3 px-4 rounded-md font-bold text-sm bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 transition-all"
+              >
+                STOP
+              </button>
+            ) : (
+              <button 
+                type="submit"
+                className="flex-1 py-3 px-4 rounded-md font-bold text-sm text-white relative overflow-hidden group"
+                style={{ background: 'linear-gradient(90deg, var(--color-architect-start), var(--color-architect-end))' }}
+              >
+                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative flex items-center justify-center gap-2">
+                  🚀 Launch Swarm
+                </div>
+              </button>
+            )}
+          </div>
         </div>
       </form>
     </div>
