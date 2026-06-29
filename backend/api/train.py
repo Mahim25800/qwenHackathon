@@ -34,15 +34,14 @@ async def stream_training(request: TrainRequest):
 
     try:
         # 1. Compile the code
-        local_scope = {}
-        # Make sure torch and nn are available in the exec scope
-        exec_globals = {"torch": torch, "nn": nn}
-        exec(request.pytorch_code, exec_globals, local_scope)
+        # Use a single dictionary so the class methods can resolve the class name globally (for old style super() calls)
+        exec_scope = {"torch": torch, "nn": nn}
+        exec(request.pytorch_code, exec_scope)
 
         # Find the nn.Module class
         module_class = None
-        for name, obj in local_scope.items():
-            if isinstance(obj, type) and issubclass(obj, nn.Module):
+        for name, obj in exec_scope.items():
+            if isinstance(obj, type) and issubclass(obj, nn.Module) and obj is not nn.Module:
                 module_class = obj
                 break
         
