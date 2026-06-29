@@ -86,3 +86,14 @@ def update_session_status(session_id: str, status: str):
     ''', (status, session_id))
     conn.commit()
     conn.close()
+
+def get_session_status(session_id: str) -> str:
+    db_path = settings.database_url.replace("sqlite:///", "")
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT final_status FROM sessions WHERE session_id = ?
+    ''', (session_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else ""

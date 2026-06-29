@@ -5,7 +5,7 @@ import { startSwarmSession } from '../lib/api';
 import { useSSE } from '../hooks/useSSE';
 
 export function ControlPanel() {
-  const { swarmState, swarmConfig, reset, setSwarmState } = useAppStore();
+  const { swarmState, swarmConfig, reset, setSwarmState, sessionId, setSessionId } = useAppStore();
   const { connect, disconnect } = useSSE();
   
   const [config, setConfig] = useState<SwarmConfig>(swarmConfig);
@@ -21,8 +21,9 @@ export function ControlPanel() {
     try {
       // Connect to SSE first (in reality, backend generates ID, we connect, then start. 
       // Simplified here: backend returns session ID on start, then we connect.)
-      const sessionId = await startSwarmSession(config);
-      connect(sessionId);
+      const newSessionId = await startSwarmSession(config);
+      setSessionId(newSessionId);
+      connect(newSessionId);
     } catch (err) {
       console.error(err);
       setSwarmState('error', err instanceof Error ? err.message : 'Unknown error');
@@ -31,7 +32,14 @@ export function ControlPanel() {
     }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
+    if (swarmState === 'running' && sessionId) {
+      try {
+        await fetch(`http://127.0.0.1:8000/api/swarm/stop/${sessionId}`, { method: 'POST' });
+      } catch (err) {
+        console.error("Failed to stop session on backend:", err);
+      }
+    }
     disconnect();
     reset();
   };

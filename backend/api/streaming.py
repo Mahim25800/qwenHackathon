@@ -57,6 +57,16 @@ async def stream_debate(session_id: str, config: SwarmConfig) -> AsyncGenerator[
     try:
         # Use graph.astream with stream_mode="updates"
         async for event in graph.astream(state, stream_mode="updates"):
+            from db.debate_log import get_session_status
+            if get_session_status(session_id) == "stopped":
+                logger.info(f"Session {session_id} stopped by user.")
+                err_event = SwarmEvent(
+                    type="error",
+                    message="Swarm session stopped by user."
+                )
+                yield f"data: {err_event.model_dump_json()}\n\n"
+                break
+                
             # 'event' is a dict containing the node that ran and the state updates
             # Example: {"data_explorer": {"dataset_profile": {...}, "debate_log": [...]}}
             

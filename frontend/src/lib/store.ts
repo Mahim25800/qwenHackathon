@@ -17,6 +17,7 @@ export interface AppState {
   finalResult: any | null;
   swarmConfig: SwarmConfig;
   error: string | null;
+  sessionId: string | null;
 
   // Actions
   startSwarm: (config: SwarmConfig) => void;
@@ -26,6 +27,7 @@ export interface AppState {
   setIteration: (iteration: number) => void;
   setFinalResult: (result: any) => void;
   setSwarmState: (state: 'idle' | 'running' | 'completed' | 'error', error?: string) => void;
+  setSessionId: (id: string | null) => void;
   reset: () => void;
 }
 
@@ -35,7 +37,7 @@ const initialConfig: SwarmConfig = {
   num_classes: 10,
   max_params: 10000000,
   target_latency_ms: 20,
-  max_iterations: 3,
+  max_iterations: 5,
 };
 
 const initialAgentsState = {
@@ -54,6 +56,7 @@ export const useAppStore = create<AppState>()(
     finalResult: null,
     swarmConfig: initialConfig,
     error: null,
+    sessionId: null,
 
     startSwarm: (config) =>
       set({
@@ -96,6 +99,9 @@ export const useAppStore = create<AppState>()(
     setSwarmState: (swarmState, error = undefined) =>
       set({ swarmState, error }),
 
+    setSessionId: (id) =>
+      set({ sessionId: id }),
+
     reset: () =>
       set({
         swarmState: 'idle',
@@ -105,6 +111,7 @@ export const useAppStore = create<AppState>()(
         currentIteration: 0,
         finalResult: null,
         error: null,
+        sessionId: null,
       }),
   }))
 );

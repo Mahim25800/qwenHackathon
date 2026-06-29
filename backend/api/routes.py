@@ -44,3 +44,9 @@ async def stream_swarm(session_id: str):
         media_type="text/event-stream",
         headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"}
     )
+
+@router.post("/swarm/stop/{session_id}")
+async def stop_swarm(session_id: str):
+    from db.debate_log import update_session_status
+    update_session_status(session_id, "stopped")
+    return {"message": "Session stopped"}
