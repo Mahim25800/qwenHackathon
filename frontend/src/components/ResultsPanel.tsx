@@ -42,8 +42,7 @@ export function ResultsPanel() {
     setTrainLogs([]);
     setTrainStatus('Initializing...');
     
-    // Convert shape string "3,32,32" to array [3,32,32]
-    const inputShape = swarmConfig.input_shape.split(',').map(s => parseInt(s.trim(), 10));
+    const inputShape = swarmConfig.input_shape;
 
     try {
       const response = await fetch('http://localhost:8000/api/train', {
