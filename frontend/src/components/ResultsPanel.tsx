@@ -136,7 +136,7 @@ export function ResultsPanel() {
           }`}>
             {isApproved ? 'ARCHITECTURE APPROVED' : 'MAX ITERATIONS REACHED'}
           </div>
-          {isApproved && !isTraining && (
+          {!isExecutionFailed && !isTraining && (
             <button 
               onClick={handleTestTrain}
               className="bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 border border-blue-500/30 px-3 py-1.5 rounded-md text-xs font-bold transition-colors"
