@@ -50,7 +50,7 @@ export function CodeViewer() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto custom-scrollbar p-0 bg-[#0d0d12]">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-0 bg-[#0d0d12] max-h-[400px]">
         {currentCode ? (
           <pre className="m-0 p-4 text-xs font-mono !bg-transparent">
             <code className="language-python">
