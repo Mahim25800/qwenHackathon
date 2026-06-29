@@ -7,10 +7,29 @@ export function ResultsPanel() {
   const [isTraining, setIsTraining] = useState(false);
   const [trainLogs, setTrainLogs] = useState<any[]>([]);
   const [trainStatus, setTrainStatus] = useState<string>('');
+  const [isClosed, setIsClosed] = useState(false);
+
+  // Reopen the panel if a new result comes in
+  useEffect(() => {
+    setIsClosed(false);
+  }, [finalResult]);
 
   if (swarmState !== 'completed' || !finalResult) {
     return null;
   }
+
+  if (isClosed) {
+    return (
+      <button 
+        onClick={() => setIsClosed(false)}
+        className="absolute top-4 right-4 z-50 glass-panel px-4 py-2 text-sm font-bold text-green-400 hover:bg-white/5 border border-green-500/30 shadow-lg animate-fade-in flex items-center gap-2"
+      >
+        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse-glow"></span>
+        View Optimization Results
+      </button>
+    );
+  }
+
 
   // Check if finalResult is approved by checking the backend's official final_status
   const isApproved = finalResult.final_status === 'approved';
@@ -58,32 +77,49 @@ export function ResultsPanel() {
       if (!response.body) return;
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = '';
 
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
         
-        const text = decoder.decode(value);
-        const lines = text.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        
+        // Keep the last partial line in the buffer
+        buffer = lines.pop() || '';
+        
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = JSON.parse(line.substring(6));
-            setTrainLogs(prev => [...prev, data]);
-            setTrainStatus(data.message || `Training Epoch ${data.epoch}...`);
-            if (data.status === 'completed' || data.status === 'error') {
-              break;
+          if (line.trim().startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.trim().substring(6));
+              setTrainLogs(prev => [...prev, data]);
+              setTrainStatus(data.message || `Training Epoch ${data.epoch}...`);
+              if (data.status === 'completed' || data.status === 'error') {
+                break; // Ends parsing for this line, but loop continues if more lines exist
+              }
+            } catch (err) {
+              console.error("Failed to parse SSE JSON:", line, err);
             }
           }
         }
       }
     } catch (e) {
+      console.error(e);
       setTrainStatus('Error starting training');
     }
   };
 
   return (
-    <div className="glass-panel p-6 border-t-2 border-green-500/30 animate-slide-up bg-[#0a0a0f]/95 backdrop-blur-3xl absolute top-4 left-4 right-4 rounded-xl shadow-2xl z-50 overflow-hidden max-h-[80vh] flex flex-col">
-      <div className="flex justify-between items-start mb-6 shrink-0">
+    <div className="glass-panel p-6 border-t-2 border-green-500/30 animate-slide-up bg-[#0a0a0f]/95 backdrop-blur-3xl absolute top-4 left-4 right-4 rounded-xl shadow-2xl z-50 flex flex-col" style={{ maxHeight: 'calc(100% - 32px)' }}>
+      <button 
+        onClick={() => setIsClosed(true)} 
+        className="absolute top-4 right-4 text-white/40 hover:text-white bg-black/20 hover:bg-black/40 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-10"
+      >
+        ✕
+      </button>
+      
+      <div className="flex justify-between items-start mb-6 shrink-0 pr-10">
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-3">
             <span className={`w-3 h-3 rounded-full ${isApproved ? 'bg-green-400' : 'bg-amber-400'} animate-pulse-glow`}></span>
@@ -148,8 +184,8 @@ export function ResultsPanel() {
       )}
 
       {isTraining && (
-        <div className="mt-4 border-t border-white/10 pt-4 overflow-y-auto custom-scrollbar flex-1 min-h-[200px]">
-          <h3 className="text-sm font-bold text-white/80 mb-2">Live Training Terminal (5 Epochs)</h3>
+        <div className="mt-4 border-t border-white/10 pt-4 flex-1 min-h-[200px] flex flex-col overflow-hidden">
+          <h3 className="text-sm font-bold text-white/80 mb-2 shrink-0">Live Training Terminal (5 Epochs)</h3>
           <div className="bg-black/60 rounded p-4 font-mono text-xs text-green-400/80 h-full overflow-y-auto">
             {trainLogs.map((log, i) => (
               <div key={i} className="mb-1">
