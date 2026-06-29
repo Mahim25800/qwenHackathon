@@ -14,6 +14,7 @@ export function ResultsPanel() {
 
   // Check if finalResult is approved by checking the backend's official final_status
   const isApproved = finalResult.final_status === 'approved';
+  const isExecutionFailed = finalResult.final_critique?.code_executed_successfully === false;
   
   // Use the actual parameter count from the Critic's evaluation if available
   const paramCount = finalResult.final_critique?.param_count || finalResult.final_blueprint?.total_params || finalResult.param_count || finalResult.total_params || 0;
@@ -27,6 +28,13 @@ export function ResultsPanel() {
   const budgetRatio = paramCount > 0 ? ((paramCount / swarmConfig.max_params) * 100).toFixed(1) : "0";
   const reason = finalResult.reason || (isApproved ? 'Final architecture accepted.' : 'Max iterations reached without consensus.');
   const title = isApproved ? 'Swarm Consensus Reached' : 'Debate Terminated';
+  
+  const paramCountStr = isExecutionFailed ? "N/A" : `${(paramCount / 1000000).toFixed(2)} / ${(swarmConfig.max_params / 1000000).toFixed(2)} M`;
+  const paramValue = isExecutionFailed ? "N/A" : (paramCount / 1000000).toFixed(2);
+  const paramUnit = isExecutionFailed ? "" : `M (${budgetRatio}%)`;
+  
+  const macValue = isExecutionFailed ? "N/A" : (macCount / 1000000).toFixed(2);
+  const macUnit = isExecutionFailed ? "" : "M";
 
   const handleTestTrain = async () => {
     if (!currentCode) return;
@@ -104,30 +112,41 @@ export function ResultsPanel() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 shrink-0 mb-4">
-        <MetricsCard 
-          label="Total Parameters" 
-          value={!isApproved && paramCount > 0 ? `${(paramCount / 1000000).toFixed(2)} / ${(swarmConfig.max_params / 1000000).toFixed(2)}` : (paramCount / 1000000).toFixed(2)} 
-          unit={`M (${budgetRatio}%)`}
-          color="var(--color-architect-end)"
-        />
-        <MetricsCard 
-          label="Compute (MACs)" 
-          value={(macCount / 1000000).toFixed(2)} 
-          unit="M"
-          color="var(--color-critic-end)"
-        />
-        <MetricsCard 
-          label="Iterations" 
-          value={currentIteration}
-          color="var(--color-explorer-start)"
-        />
-        <MetricsCard 
-          label="Status" 
-          value={isApproved ? "Optimal" : "Sub-optimal"}
-          color={isApproved ? "rgba(0,255,100,0.8)" : "rgba(255,150,0,0.8)"}
-        />
-      </div>
+      {isExecutionFailed && !isApproved ? (
+        <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-4 text-red-200">
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            ⚠️ Optimization Failed
+          </h3>
+          <p className="mt-1 text-sm">
+            The Swarm could not generate a valid model within the constraints. The final attempt ({finalResult.final_blueprint?.architecture_name || 'Model'}) contained syntax errors. Please try increasing the parameter limit or relaxing constraints.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-4 shrink-0 mb-4">
+          <MetricsCard 
+            label="Total Parameters" 
+            value={paramValue} 
+            unit={paramUnit}
+            color="var(--color-architect-end)"
+          />
+          <MetricsCard 
+            label="Compute (MACs)" 
+            value={macValue} 
+            unit={macUnit}
+            color="var(--color-critic-end)"
+          />
+          <MetricsCard 
+            label="Iterations" 
+            value={Math.min(currentIteration, swarmConfig.max_iterations)}
+            color="var(--color-explorer-start)"
+          />
+          <MetricsCard 
+            label="Status" 
+            value={isApproved ? "Optimal" : "Sub-optimal"}
+            color={isApproved ? "rgba(0,255,100,0.8)" : "rgba(255,150,0,0.8)"}
+          />
+        </div>
+      )}
 
       {isTraining && (
         <div className="mt-4 border-t border-white/10 pt-4 overflow-y-auto custom-scrollbar flex-1 min-h-[200px]">
