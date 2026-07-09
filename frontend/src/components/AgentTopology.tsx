@@ -25,7 +25,7 @@ const edgeTypes = {
 };
 
 export function AgentTopology() {
-  const { agents, swarmState, currentIteration } = useAppStore();
+  const { agents, swarmState, currentIteration, finalResult } = useAppStore();
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
@@ -71,11 +71,15 @@ export function AgentTopology() {
       {
         id: 'end',
         position: { x: 250, y: 450 },
-        data: { label: swarmState === 'completed' ? 'Success' : 'END' },
+        data: { label: swarmState === 'completed' ? (finalResult?.final_status === 'approved' ? 'Success' : 'Fallback') : 'END' },
         style: {
-          background: swarmState === 'completed' ? 'rgba(0,255,100,0.2)' : 'rgba(255,255,255,0.05)',
+          background: swarmState === 'completed' 
+            ? (finalResult?.final_status === 'approved' ? 'rgba(0,255,100,0.2)' : 'rgba(255,150,0,0.2)') 
+            : 'rgba(255,255,255,0.05)',
           color: 'white',
-          border: swarmState === 'completed' ? '1px solid rgba(0,255,100,0.5)' : '1px solid rgba(255,255,255,0.1)',
+          border: swarmState === 'completed' 
+            ? (finalResult?.final_status === 'approved' ? '1px solid rgba(0,255,100,0.5)' : '1px solid rgba(255,150,0,0.5)') 
+            : '1px solid rgba(255,255,255,0.1)',
           borderRadius: '8px',
           padding: '10px 20px',
         },
@@ -133,7 +137,7 @@ export function AgentTopology() {
     ] as Edge[];
 
     setEdges(initialEdges);
-  }, [agents, swarmState, currentIteration]);
+  }, [agents, swarmState, currentIteration, finalResult]);
 
   return (
     <div className="w-full h-full relative" style={{ minHeight: '400px' }}>

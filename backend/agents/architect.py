@@ -176,7 +176,7 @@ You must fix this error in the new design. The code must be syntactically correc
         )
 
         if iteration >= max_iterations - 1:
-            user_prompt += f"\n\nCRITICAL FALLBACK INSTRUCTION: You have reached iteration {iteration} out of {max_iterations} and are still failing. ABANDON complex architectures (like ResNet or Transformers). Instead, generate a very simple, guaranteed-to-work 3-layer CNN. When generating the fallback Simple3LayerCNN, you MUST include the complete `forward(self, x)` method. Do not truncate the code. Ensure the code is syntactically perfect PyTorch. This is an absolute requirement to ensure code execution succeeds for the user!"
+            user_prompt += f"\n\nCRITICAL FALLBACK INSTRUCTION: You have reached iteration {iteration} out of {max_iterations} and are still failing. ABANDON complex architectures (like ResNet or Transformers). Instead, generate a very simple, guaranteed-to-work 3-layer CNN. When generating the fallback Simple3LayerCNN, you MUST include the ENTIRE, COMPLETE class definition, starting from `import torch` and `import torch.nn as nn`, including the `__init__` and `super().__init__()` calls, all the way to the complete `forward(self, x)` method. Do not truncate the code with '...' anywhere. Ensure the code is syntactically perfect PyTorch. This is an absolute requirement to ensure code execution succeeds for the user!"
 
         try:
             blueprint = self._structured_chat(

@@ -136,14 +136,21 @@ Set code_executed_successfully to false."""
 
         except Exception as e:
             logger.error(f"Critic failed: {e}")
+            
+            # Clean up XML tags from the error message (e.g. from failed LLM parses)
+            import re
+            clean_error = re.sub(r'<[^>]+>', '', str(e)).strip()
+            if not clean_error:
+                clean_error = str(e)
+                
             # Return a hard rejection on LLM failure
             return CritiqueMatrix(
                 status="REJECT",
                 param_count=sandbox_result.get("total_params", 0),
                 params_within_budget=False,
-                reason=f"Critic agent encountered an error: {str(e)}",
+                reason=f"Critic agent encountered an error: {clean_error}",
                 suggestion="Retry with a simpler architecture",
                 severity="HIGH",
                 code_executed_successfully=sandbox_result.get("success", False),
-                execution_error=str(e),
+                execution_error=clean_error,
             )

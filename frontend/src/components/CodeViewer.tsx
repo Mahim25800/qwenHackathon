@@ -5,7 +5,7 @@ import 'prismjs/themes/prism-tomorrow.css'; // You can install this or add custo
 import { useAppStore } from '../lib/store';
 
 export function CodeViewer() {
-  const { currentCode, currentIteration } = useAppStore();
+  const { currentCode, currentIteration, swarmConfig } = useAppStore();
 
   useEffect(() => {
     Prism.highlightAll();
@@ -20,7 +20,7 @@ export function CodeViewer() {
           <h2 className="text-sm font-bold text-white/90">PyTorch Implementation</h2>
           {currentIteration > 0 && (
             <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] text-white/70 border border-white/5">
-              Iteration {currentIteration}
+              Iteration {Math.min(currentIteration, swarmConfig?.max_iterations || 5)}
             </span>
           )}
         </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useAppStore } from '../lib/store';
 
 export function DebateTimeline() {
-  const { debateLog } = useAppStore();
+  const { debateLog, swarmConfig } = useAppStore();
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export function DebateTimeline() {
               <div className="glass-panel p-3 text-sm">
                 <div className="flex justify-between items-start mb-2">
                   <div className="font-bold capitalize text-white/90">
-                    {entry.agent} <span className="text-white/40 font-normal text-xs ml-2">Iter {entry.iteration}</span>
+                    {entry.agent} <span className="text-white/40 font-normal text-xs ml-2">Iter {Math.min(entry.iteration, swarmConfig?.max_iterations || 5)}</span>
                   </div>
                   <div className="text-[10px] text-white/40 font-mono">
                     {new Date(entry.timestamp).toLocaleTimeString()}
